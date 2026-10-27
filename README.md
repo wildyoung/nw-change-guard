@@ -50,6 +50,7 @@
 ## 모니터링
 
 Prometheus + Grafana (`monitoring/`). 지표 수집기 `tools/exporter.py` 가 5초마다 모은다.
+대시보드: **https://8-230-27-4.sslip.io/d/nwlab?kiosk** (보기 전용, 실습 VM 이 켜져 있을 때만)
 
 - 경보: 라우터 다운 · 링크 다운 · 서비스 도달 실패 · 에지 단일 경로 · 수집기 다운
 - 대시보드: 링크 · 서비스 상태 흐름, 링크별 트래픽(장애 때 우회 경로로 옮겨 가는 모습), 서비스까지 OSPF 비용, 설정 변경 시각(보라색 점선), 롤백 영향 시간
@@ -93,7 +94,6 @@ sh lab/up.sh [--reset]            # --reset: 기준 설정으로 다시 시작 (
 .venv/bin/python tools/accuracy.py
 ```
 
-Grafana 는 VM 의 localhost 에서만 열린다 → SSH 터널 `-L 3000:127.0.0.1:3000` 후 http://localhost:3000
-
-공개 주소로 열려면 (보기 전용 · 로그인 없음 · Prometheus 는 계속 내부만):
-`monitoring/.env` 에 `SITE_ADDRESS=<IP 의 점을 - 로>.sslip.io` → 방화벽 80 · 443 열기 → `docker compose --profile public up -d` (Caddy 가 HTTPS 인증서 자동 발급)
+Grafana 는 공개 주소 https://8-230-27-4.sslip.io 로 연다 (보기 전용 · 로그인 없음 · Prometheus 와 지표 수집기는 계속 내부만).
+다른 VM 에 세우려면: `monitoring/.env` 에 `SITE_ADDRESS=<IP 의 점을 - 로>.sslip.io` → 방화벽 80 · 443 열기 → `docker compose --profile public up -d` (Caddy 가 HTTPS 인증서 자동 발급).
+공개하지 않을 때는 `public` 프로필 없이 띄우고 SSH 터널 `-L 3000:127.0.0.1:3000` 후 http://localhost:3000
