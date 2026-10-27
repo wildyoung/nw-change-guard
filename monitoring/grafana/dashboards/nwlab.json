@@ -1,0 +1,177 @@
+{
+  "uid": "nwlab",
+  "title": "가상 백본 운용 현황",
+  "tags": ["nwlab"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 41,
+  "editable": false,
+  "annotations": {
+    "list": [
+      {
+        "name": "설정 변경",
+        "datasource": { "type": "prometheus", "uid": "prom" },
+        "enable": true,
+        "iconColor": "purple",
+        "expr": "nwguard_change_end_timestamp_seconds * 1000",
+        "step": "60s",
+        "titleFormat": "설정 변경 {{router}} · {{result}}",
+        "textFormat": "{{reason}}",
+        "useValueForTime": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "끊긴 링크",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "count(nwlab_ospf_link_up == 0) or vector(0)", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "서비스 도달 실패",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "count(nwlab_service_reachable == 0) or vector(0)", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "발생 중 경보",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] }
+        }
+      },
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "마지막 롤백 영향 시간",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwguard_last_impact_seconds", "instant": true, "legendFormat": "{{router}}" }],
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" }
+    },
+    {
+      "id": 5,
+      "type": "state-timeline",
+      "title": "OSPF 링크 상태",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwlab_ospf_link_up", "legendFormat": "{{link}}" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "showValue": "never", "mergeValues": true, "rowHeight": 0.85, "legend": { "showLegend": false } }
+    },
+    {
+      "id": 6,
+      "type": "state-timeline",
+      "title": "서비스 도달 (ping)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwlab_service_reachable", "legendFormat": "{{src}} → {{dst}}" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "실패", "color": "red" }, "1": { "text": "정상", "color": "green" } } }],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "showValue": "never", "mergeValues": true, "rowHeight": 0.85, "legend": { "showLegend": false } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "링크별 트래픽",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "sum by (link) (rate(nwlab_iface_tx_bytes_total[20s])) * 8", "legendFormat": "{{link}}" }],
+      "fieldConfig": { "defaults": { "unit": "bps", "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "서비스 대역까지 OSPF 비용",
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwlab_service_route_metric", "legendFormat": "{{router}} → {{service}}" }],
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0, "custom": { "lineWidth": 2, "lineInterpolation": "stepAfter" } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "발생 중 경보",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "ALERTS{alertstate=\"firing\"}", "instant": true, "format": "table" }],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Value": true, "__name__": true, "alertstate": true, "instance": true, "job": true },
+            "indexByName": { "severity": 0, "alertname": 1 },
+            "renameByName": { "severity": "등급", "alertname": "경보" }
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "noValue": "경보 없음" } },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "서비스 왕복 시간",
+      "gridPos": { "x": 12, "y": 22, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwlab_service_rtt_seconds", "legendFormat": "{{src}} → {{dst}}" }],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 } },
+      "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 11,
+      "type": "bargauge",
+      "title": "설정 변경 결과 (누적)",
+      "gridPos": { "x": 18, "y": 22, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [{ "refId": "A", "expr": "nwguard_changes_total > 0", "instant": true, "legendFormat": "{{result}}" }],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "min": 0, "color": { "mode": "fixed", "fixedColor": "purple" } },
+        "overrides": []
+      },
+      "options": { "orientation": "horizontal", "displayMode": "basic", "reduceOptions": { "calcs": ["lastNotNull"] }, "showUnfilled": true }
+    }
+  ]
+}

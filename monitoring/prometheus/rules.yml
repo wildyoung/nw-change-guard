@@ -1,0 +1,30 @@
+# 경보 기준은 nwguard 점검과 같다: 라우터 응답 · 링크(OSPF 이웃) · 서비스 도달 · 에지 이중화
+groups:
+  - name: nwlab
+    rules:
+      - alert: RouterDown
+        expr: nwlab_router_up == 0
+        labels: { severity: critical }
+        annotations: { summary: "{{ $labels.router }} 응답 없음" }
+
+      - alert: LinkDown
+        expr: nwlab_ospf_link_up == 0
+        labels: { severity: warning }
+        annotations: { summary: "링크 {{ $labels.link }} OSPF 이웃 끊김" }
+
+      - alert: ServiceUnreachable
+        expr: nwlab_service_reachable == 0
+        for: 10s
+        labels: { severity: critical }
+        annotations: { summary: "{{ $labels.src }} → {{ $labels.dst }} 서비스 도달 실패" }
+
+      - alert: EdgeSingleHomed
+        expr: nwlab_ospf_neighbors_full{router=~"r5|r6"} < 2
+        labels: { severity: warning }
+        annotations: { summary: "{{ $labels.router }} 업링크 {{ $value }}개 — 다음 장애에 서비스 단절" }
+
+      - alert: ExporterDown
+        expr: up{job="nwlab"} == 0
+        for: 15s
+        labels: { severity: critical }
+        annotations: { summary: "지표 수집기(exporter) 응답 없음" }

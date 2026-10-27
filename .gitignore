@@ -1,0 +1,7 @@
+# VM 에서 생기는 것
+lab/runtime/
+changes/records/
+monitoring/.env
+.venv/
+__pycache__/
+*.pyc

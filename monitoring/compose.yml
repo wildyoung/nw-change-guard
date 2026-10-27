@@ -1,0 +1,38 @@
+# 모니터링: Prometheus(지표 · 경보 규칙) + Grafana(대시보드)
+# 둘 다 VM 의 localhost 에서만 열린다 — 보려면 SSH 터널 (monitoring/README 참고)
+# 지표는 tools/exporter.py (systemd 서비스 nwlab-exporter, 127.0.0.1:9105)
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=127.0.0.1:9090
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prom-data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    network_mode: host
+    env_file: .env # GF_SECURITY_ADMIN_PASSWORD (VM 에서 만든 임의 값, git 밖)
+    environment:
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_AUTH_ANONYMOUS_ENABLED: "true" # 터널로만 들어오므로 보기 전용 익명 접속
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/nwlab.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  prom-data:
+  grafana-data:
