@@ -3,6 +3,8 @@
 라우터 설정을 바꾸기 **전에** 영향을 계산하고, 바꾼 **뒤** 자동으로 점검해서, 이상이 있으면 **이전 설정으로 되돌린다.**
 장비 없이 클라우드 VM 한 대에 가상 백본(FRR 라우터 6대)을 띄워 만들었다.
 
+**라이브 대시보드 (보기 전용):** https://8-230-27-4.sslip.io/d/nwlab?kiosk — 실습 VM 이 켜져 있을 때만 열린다
+
 > 2021년 전국 인터넷 장애는 라우팅 설정 한 줄에서 시작됐다.
 > 사람이 아무리 조심해도 오타와 착오는 생긴다 — 그래서 **절차를 도구로** 만든다.
 
@@ -92,3 +94,6 @@ sh lab/up.sh [--reset]            # --reset: 기준 설정으로 다시 시작 (
 ```
 
 Grafana 는 VM 의 localhost 에서만 열린다 → SSH 터널 `-L 3000:127.0.0.1:3000` 후 http://localhost:3000
+
+공개 주소로 열려면 (보기 전용 · 로그인 없음 · Prometheus 는 계속 내부만):
+`monitoring/.env` 에 `SITE_ADDRESS=<IP 의 점을 - 로>.sslip.io` → 방화벽 80 · 443 열기 → `docker compose --profile public up -d` (Caddy 가 HTTPS 인증서 자동 발급)

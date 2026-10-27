@@ -1,0 +1,10 @@
+# 공개 주소 → Grafana (인증서는 Caddy 가 Let's Encrypt 로 자동 발급 · 갱신)
+{$SITE_ADDRESS} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	reverse_proxy 127.0.0.1:3000
+}

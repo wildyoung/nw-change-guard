@@ -1,6 +1,7 @@
-# 모니터링: Prometheus(지표 · 경보 규칙) + Grafana(대시보드)
-# 둘 다 VM 의 localhost 에서만 열린다 — 보려면 SSH 터널 (monitoring/README 참고)
+# 모니터링: Prometheus(지표 · 경보 규칙) + Grafana(대시보드) + Caddy(공개 주소 HTTPS)
+# Prometheus · Grafana 는 VM 의 localhost 에서만 열린다. 밖에서는 Caddy(80 · 443) → Grafana 만 보인다
 # 지표는 tools/exporter.py (systemd 서비스 nwlab-exporter, 127.0.0.1:9105)
+# .env (VM 에서 만든 값, git 밖): GF_SECURITY_ADMIN_PASSWORD · SITE_ADDRESS (예: 1-2-3-4.sslip.io, 비우면 공개 안 함)
 
 services:
   prometheus:
@@ -18,12 +19,18 @@ services:
   grafana:
     image: grafana/grafana:12.1.0
     network_mode: host
-    env_file: .env # GF_SECURITY_ADMIN_PASSWORD (VM 에서 만든 임의 값, git 밖)
+    env_file: .env
     environment:
       GF_SERVER_HTTP_ADDR: 127.0.0.1
       GF_SERVER_HTTP_PORT: "3000"
-      GF_AUTH_ANONYMOUS_ENABLED: "true" # 터널로만 들어오므로 보기 전용 익명 접속
+      GF_SERVER_ROOT_URL: https://${SITE_ADDRESS:-localhost}/
+      # 누구나 보기만: 익명 Viewer, 로그인 화면 없음 (대시보드는 파일에서 오므로 관리자 로그인이 필요 없다)
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_EXPLORE_ENABLED: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/nwlab.json
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
@@ -33,6 +40,18 @@ services:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2.10.0
+    network_mode: host
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    restart: unless-stopped
+    profiles: [public]
+
 volumes:
   prom-data:
   grafana-data:
+  caddy-data:
